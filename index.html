@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Guard - Notion style xD</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-collapse-btn" id="collapse-sidebar" title="Ocultar Sidebar">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            <div class="sidebar-expand-btn hidden" id="expand-sidebar" title="Fijar Sidebar">
+                <i class="fas fa-thumbtack"></i>
+            </div>
+            <div class="sidebar-header">
+                <div class="user-profile-header">
+                    <div class="avatar-container">
+                        <img id="user-avatar" class="avatar-img" src="" style="display:none">
+                        <div id="user-avatar-placeholder" class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <span id="user-name-display" class="user-name">Escritor PC</span>
+                    <span class="user-status-tag">Local</span>
+                </div>
+                <button id="setup-folder" title="Conectar Carpeta"><i class="fas fa-folder-open"></i></button>
+            </div>
+
+            <button id="sidebar-reconnect-btn" class="btn-primary-small hidden"
+                style="margin: 0 15px 15px; width: calc(100% - 30px);">
+                <i class="fas fa-unlock"></i> Reactivar Carpeta
+            </button>
+
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <span>PROYECTOS</span>
+                        <div class="sidebar-actions">
+                            <button id="add-project" title="Crear Proyecto"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <ul id="project-list" class="nav-list">
+                        <!-- Projects with nested files will be injected here -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="nav-item" id="open-settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-editor">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="breadcrumb" id="breadcrumb">
+                    <button id="show-sidebar-btn" class="show-sidebar-btn hidden" title="Mostrar Sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span class="root" onclick="window.closeFile()"><i class="fas fa-home"></i> Inicio</span>
+                </div>
+                <div class="editor-actions">
+                    <button id="manual-save" class="btn-primary-small" title="Guardar cambios (Ctrl+S)">
+                        <i class="fas fa-save"></i> <span>Guardar</span>
+                    </button>
+                    <button id="spell-check" title="Revisar ortografía (ES)">
+                        <i class="fas fa-spell-check"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Editor Area -->
+            <div class="editor-wrapper">
+                <div class="editor-metadata hidden" id="metadata-panel">
+                    <span id="file-icon" class="file-icon-large">📄</span>
+                    <div class="active-file-header">
+                        <h1 id="active-file-title" class="active-file-title"></h1>
+                        <button id="editor-rename-btn" class="btn-icon-small" title="Renombrar"><i
+                                class="fas fa-pen"></i></button>
+                    </div>
+                </div>
+
+                <!-- Welcome Screen -->
+                <div id="welcome-screen" class="welcome-screen">
+                    <div class="welcome-content">
+                        <div class="welcome-logo">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <h1>Hola de nuevo, <span id="welcome-user-name">Valentín</span></h1>
+                        <p id="welcome-message">¿Qué vamos a escribir hoy? Selecciona un proyecto para continuar.</p>
+
+                        <button id="reconnect-folder-btn" class="btn-primary hidden" style="margin: 20px auto;"
+                            onclick="window.requestWorkspacePermission ? window.requestWorkspacePermission() : null">
+                            <i class="fas fa-unlock"></i> Reactivar Acceso a Carpeta
+                        </button>
+
+                        <div class="recent-projects-grid" id="recent-projects">
+                            <!-- Recent projects injected here -->
+                        </div>
+
+                        <div class="welcome-actions">
+                            <button id="welcome-new-project" class="btn-primary"
+                                onclick="window.createProjectAction()"><i class="fas fa-plus"></i> Nuevo
+                                Proyecto</button>
+                            <button id="welcome-open-folder" class="btn-sub" onclick="window.selectWorkspace()"><i
+                                    class="fas fa-folder-open"></i> Cambiar Carpeta</button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-body" id="editor-body" contenteditable="true"
+                        placeholder="Escribe algo increíble...">
+                        <p data-placeholder="Empieza a escribir aquí..."><br></p>
+                    </div>
+                    <!-- Paragraph Context Toolbar (Floating) -->
+                    <div id="para-toolbar" class="para-toolbar hidden">
+                        <button id="para-comment-btn" title="Añadir comentario"><i class="fas fa-comment"></i> <span
+                                id="para-comment-count"></span></button>
+                    </div>
+                </div>
+
+                <!-- Children Links Section -->
+                <div id="children-links" class="children-links hidden">
+                    <h3>Sub-archivos relacionados:</h3>
+                    <ul id="links-list"></ul>
+                    <button id="add-sub-file" class="btn-sub"><i class="fas fa-plus"></i> Añadir sub-archivo</button>
+                </div>
+            </div>
+
+            <!-- Footer Stats -->
+            <footer class="editor-footer">
+                <div class="stats">
+                    <span id="stat-lines">Líneas: 0</span>
+                    <span id="stat-words">Palabras: 0</span>
+                    <span id="stat-chars">Caracteres: 0</span>
+                    <span id="stat-added" title="Caracteres agregados en esta sesión"
+                        style="color: var(--accent-green); opacity: 0.8"><i class="fas fa-plus"></i> 0</span>
+                    <span id="stat-removed" title="Caracteres borrados en esta sesión"
+                        style="color: var(--accent-red); opacity: 0.8"><i class="fas fa-minus"></i> 0</span>
+                </div>
+                <div class="footer-right">
+                    <div class="status-badge" id="status-bar"></div>
+                    <button id="upgrade-status" class="btn-upgrade-footer" title="Cambiar Estado">
+                        <i id="upgrade-icon" class="fas fa-arrow-up"></i> <span id="upgrade-text">Upgrade</span>
+                    </button>
+                    <div class="footer-goal" id="footer-goal-container">
+                        <i class="fas fa-bullseye"></i>
+                        <input type="number" id="char-goal" value="30000" class="mini-goal-input">
+                        <div class="mini-progress">
+                            <div id="goal-progress" class="mini-progress-fill"></div>
+                        </div>
+                        <span id="progress-text">0%</span>
+                        <div class="spellcheck-status" id="spellcheck-status"></div>
+                    </div>
+            </footer>
+        </main>
+
+        <!-- Comments Sidebar (Hidden by default) -->
+        <aside class="comments-sidebar hidden" id="comments-sidebar">
+            <div class="comments-header">
+                <h3>Comentarios de párrafo</h3>
+                <button id="close-comments" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="comments-list" class="comments-list">
+                <!-- Comments will be injected here -->
+            </div>
+            <div class="comment-input-area">
+                <textarea id="new-comment" placeholder="Añadir comentario..."></textarea>
+                <button id="post-comment">Enviar</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Notification system -->
+    <!-- Hover Zone for Hidden Sidebar -->
+    <div class="sidebar-hover-zone" id="sidebar-hover-zone"></div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content settings-large">
+            <div class="settings-layout">
+                <aside class="settings-sidebar">
+                    <div class="settings-sidebar-header">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>Configuración</span>
+                    </div>
+                    <nav class="settings-nav">
+                        <button class="settings-nav-btn active" data-tab="tab-general">
+                            <i class="fas fa-sliders-h"></i> General
+                        </button>
+                        <button class="settings-nav-btn" data-tab="tab-states">
+                            <i class="fas fa-tag"></i> Estados
+                        </button>
+                        <button class="settings-nav-btn" data-tab="tab-appearance">
+                            <i class="fas fa-palette"></i> Apariencia
+                        </button>
+                    </nav>
+                </aside>
+
+                <main class="settings-main">
+                    <header class="settings-main-header">
+                        <h2 id="settings-tab-title">General</h2>
+                        <button id="close-settings-top" class="close-btn"><i class="fas fa-times"></i></button>
+                    </header>
+
+                    <div id="tab-general" class="tab-content active">
+                        <div class="setting-item">
+                            <label>Auto-guardado (segundos)</label>
+                            <span class="setting-desc">Frecuencia con la que se guardan tus cambios
+                                automáticamente.</span>
+                            <input type="number" id="autosave-interval" value="30" min="5" max="300">
+                        </div>
+                        <div class="setting-item">
+                            <label>Nombre de Usuario</label>
+                            <input type="text" id="user-name-input" placeholder="Tu nombre">
+                        </div>
+                    </div>
+
+                    <div id="tab-states" class="tab-content">
+                        <div class="setting-item">
+                            <label>Gestión de Estados</label>
+                            <span class="setting-desc">Define los niveles de progreso para tus archivos.</span>
+                            <div id="states-config-list" class="states-list">
+                                <!-- States config will be here -->
+                            </div>
+                            <button id="add-state-btn" class="btn-sub" style="margin-top: 15px;">
+                                <i class="fas fa-plus"></i> Añadir Estado
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-appearance" class="tab-content">
+                        <div class="setting-item">
+                            <label>Tema</label>
+                            <span class="setting-desc">Personaliza el aspecto visual de la aplicación.</span>
+                            <div class="theme-selector">
+                                <button class="theme-btn active" data-theme="dark">Oscuro</button>
+                                <button class="theme-btn" data-theme="light">Claro (Próximamente)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="settings-main-footer">
+                        <button id="save-settings-btn" class="btn-primary">Guardar Cambios</button>
+                    </footer>
+                </main>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Custom Context Menu -->
+    <div id="custom-context-menu" class="context-menu hidden">
+        <ul id="ctx-sidebar-list" class="ctx-list">
+            <li id="ctx-rename"><i class="fas fa-edit"></i> <span>Renombrar</span></li>
+            <li id="ctx-add-sub"><i class="fas fa-plus-circle"></i> <span>Añadir Sub-archivo</span></li>
+            <li id="ctx-upgrade-sidebar"><i class="fas fa-arrow-up-right-dots"></i> <span>Upgrade Estado</span></li>
+            <li id="ctx-delete" class="danger"><i class="fas fa-trash"></i> <span>Eliminar</span></li>
+        </ul>
+        <!-- Editor context menu removed for plain text focus -->
+    </div>
+
+    <div id="comments-overlay" class="comments-overlay hidden"></div>
+    <div id="notification-container"></div>
+
+    <!-- Custom Input Modal -->
+    <div id="input-modal" class="modal">
+        <div class="modal-content">
+            <button onclick="window.closeInputModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="input-modal-title">Introduce un valor</h2>
+                <div class="setting-item" style="margin-top:25px">
+                    <input type="text" id="custom-input-field" placeholder="..." autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="input-modal-confirm" class="btn-primary" style="width: 100%">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spellcheck Info Modal -->
+    <div id="spell-modal" class="modal">
+        <div class="modal-content small text-center">
+            <div class="modal-header no-border">
+                <button onclick="document.getElementById('spell-modal').classList.remove('open')" class="close-btn"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center;">
+                    <i class="fas fa-wand-sparkles"
+                        style="font-size: 3rem; color: var(--accent-blue); margin-bottom: 20px;"></i>
+                    <h2>Asistente de Revisión</h2>
+                    <p style="margin: 15px 0; color: var(--text-secondary)">Voy a copiar tu texto al portapapeles y
+                        abrirte una pestaña en <b>correctoronline.es</b> para que revises tu obra con la mejor IA
+                        profesional.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="spell-confirm-btn" class="btn-primary" style="width: 100%">Entendido, ¡vamos!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content small text-center">
+            <div class="modal-header no-border">
+                <button onclick="window.closeConfirmModal(false)" class="close-btn"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <i id="confirm-modal-icon" class="fas fa-exclamation-triangle"
+                    style="font-size: 3rem; color: var(--accent-red); margin-bottom: 20px;"></i>
+                <h2 id="confirm-modal-title">¿Estás seguro?</h2>
+                <p id="confirm-modal-text" style="margin: 15px 0; color: var(--text-secondary)">Esta acción no se puede
+                    deshacer.</p>
+            </div>
+            <div class="modal-actions">
+                <button id="confirm-modal-yes" class="btn-primary danger" style="width: 100%">Eliminar todo</button>
+                <button onclick="window.closeConfirmModal(false)" class="btn-sub"
+                    style="width: 100%; margin-top: 10px;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
