@@ -33,7 +33,7 @@
                     <span id="user-name-display" class="user-name">Escritor PC</span>
                     <span class="user-status-tag">Local</span>
                 </div>
-                <button id="setup-folder" title="Conectar Carpeta"><i class="fas fa-folder-open"></i></button>
+                <button id="setup-folder" title="Conectar carpeta de trabajo"><i class="fas fa-folder-open"></i></button>
             </div>
 
             <button id="sidebar-reconnect-btn" class="btn-primary-small hidden">
@@ -45,7 +45,7 @@
                     <div class="section-header">
                         <span>PROYECTOS</span>
                         <div class="sidebar-actions">
-                            <button id="add-project" title="Crear Proyecto"><i class="fas fa-plus"></i></button>
+                            <button id="add-project" title="Crear nuevo proyecto"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                     <ul id="project-list" class="nav-list">
@@ -55,7 +55,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <div class="nav-item" id="open-settings">
+                <div class="nav-item" id="open-settings" title="Abrir configuración">
                     <i class="fas fa-cog"></i>
                     <span>Configuración</span>
                 </div>
@@ -76,10 +76,10 @@
                     <span class="root" onclick="window.closeFile()"><i class="fas fa-home"></i> Inicio</span>
                 </div>
                 <div class="editor-actions">
-                    <button id="manual-save" class="btn-primary-small" title="Guardar cambios (Ctrl+S)">
+                    <button id="manual-save" class="btn-primary-small" title="Guardar archivo (Ctrl+S)">
                         <i class="fas fa-save"></i> <span>Guardar</span>
                     </button>
-                    <button id="spell-check" title="Revisar ortografía">
+                    <button id="spell-check" title="Revisar ortografía (Ctrl+K)">
                         <i class="fas fa-spell-check"></i>
                     </button>
                 </div>
@@ -103,10 +103,10 @@
                         <div class="welcome-logo">
                             <i class="fas fa-shield-halved"></i>
                         </div>
-                        <h1>Hola de nuevo, <span id="welcome-user-name">Escritor</span></h1>
-                        <p id="welcome-message">¿Qué vamos a escribir hoy? Selecciona un proyecto para continuar.</p>
+                        <h1>Hola, <span id="welcome-user-name">Escritor</span></h1>
+                        <p id="welcome-message">Conecta una carpeta para empezar a escribir.</p>
 
-                        <button id="reconnect-folder-btn" class="btn-primary hidden" style="margin: 20px auto;">
+                        <button id="reconnect-folder-btn" class="btn-primary hidden" style="margin: 20px auto;" onclick="window.requestWorkspacePermission()">
                             <i class="fas fa-unlock"></i> Reactivar Acceso a Carpeta
                         </button>
 
@@ -114,13 +114,11 @@
                             <!-- Recent projects injected here -->
                         </div>
 
-                        <div class="welcome-actions">
-                            <button id="welcome-new-project" class="btn-primary" onclick="window.createProjectAction()">
-                                <i class="fas fa-plus"></i> Nuevo Proyecto
-                            </button>
-                            <button id="welcome-open-folder" class="btn-sub" onclick="window.selectWorkspace()">
+                        <div class="welcome-actions" id="welcome-actions-container">
+                            <button id="welcome-open-folder" class="btn-primary btn-large" onclick="window.selectWorkspace()">
                                 <i class="fas fa-folder-open"></i> Conectar Carpeta
                             </button>
+                            <p class="welcome-hint">Selecciona una carpeta de tu computadora</p>
                         </div>
                     </div>
                 </div>
@@ -151,14 +149,9 @@
                     <span id="stat-lines"><i class="fas fa-paragraph"></i> 0</span>
                     <span id="stat-words"><i class="fas fa-font"></i> 0</span>
                     <span id="stat-chars"><i class="fas fa-keyboard"></i> 0</span>
-                    <span id="stat-added" title="Caracteres agregados" style="color: var(--accent-green)">
-                        <i class="fas fa-plus-circle"></i> 0
-                    </span>
-                    <span id="stat-removed" title="Caracteres borrados" style="color: var(--accent-red)">
-                        <i class="fas fa-minus-circle"></i> 0
-                    </span>
                 </div>
                 <div class="footer-right">
+                    <span id="autosave-indicator" class="autosave-pulse hidden" title="Cambios sin guardar"></span>
                     <div class="status-badge" id="status-bar">Borrador</div>
                     <button id="upgrade-status" class="btn-upgrade-footer" title="Cambiar Estado">
                         <i id="upgrade-icon" class="fas fa-arrow-up"></i>
@@ -218,6 +211,9 @@
                             <button class="settings-nav-btn" data-tab="tab-shortcuts">
                                 <i class="fas fa-keyboard"></i> Atajos
                             </button>
+                            <button class="settings-nav-btn" data-tab="tab-spellcheck">
+                                <i class="fas fa-spell-check"></i> Corrector
+                            </button>
                             <button class="settings-nav-btn" data-tab="tab-data">
                                 <i class="fas fa-database"></i> Datos
                             </button>
@@ -231,10 +227,31 @@
 
                         <!-- Tab: General -->
                         <div id="tab-general" class="tab-content active">
-                            <div class="setting-item">
-                                <label>Nombre de Usuario</label>
-                                <span class="setting-desc">Tu nombre que se mostrará en la interfaz.</span>
-                                <input type="text" id="user-name-input" placeholder="Tu nombre">
+                            <div class="settings-grid-2">
+                                <div class="setting-item avatar-setting">
+                                    <label>Avatar</label>
+                                    <div class="avatar-edit-flex">
+                                        <div class="avatar-container" style="width: 80px; height: 80px;">
+                                            <img id="settings-avatar-img" class="avatar-img" src="" alt="Avatar">
+                                            <div id="settings-avatar-placeholder" class="avatar-placeholder">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        </div>
+                                        <div class="avatar-btns">
+                                            <button id="change-avatar-btn" class="btn-primary-small">
+                                                <i class="fas fa-camera"></i> Cambiar
+                                            </button>
+                                            <button id="remove-avatar-btn" class="btn-sub-small">
+                                                <i class="fas fa-trash"></i> Quitar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <label>Nombre de Usuario</label>
+                                    <span class="setting-desc">Tu nombre que se mostrará en la interfaz.</span>
+                                    <input type="text" id="user-name-input" placeholder="Tu nombre">
+                                </div>
                             </div>
                             <div class="setting-item">
                                 <label>Auto-guardado</label>
@@ -266,9 +283,18 @@
                                 </div>
                             </div>
                             <div class="setting-item">
+                                <label>Mis Temas Personalizados</label>
+                                <span class="setting-desc">Tus temas guardados independientemente.</span>
+                                <div id="custom-themes-list" class="custom-themes-grid">
+                                    <p class="no-custom-themes">No hay temas personalizados</p>
+                                </div>
+                            </div>
+                            <div class="setting-item">
                                 <label>Personalizar colores</label>
                                 <span class="setting-desc">Crea tu propio tema personalizado.</span>
                                 <div class="custom-theme-builder">
+                                    <h4>Crear Nuevo Tema</h4>
+                                    <input type="text" id="custom-theme-name" placeholder="Nombre del tema">
                                     <h4>Colores del tema</h4>
                                     <div class="color-input-group">
                                         <label>Fondo primario:</label>
@@ -290,8 +316,8 @@
                                         <input type="color" id="custom-text" value="#f5f5f7">
                                         <input type="text" id="custom-text-hex" value="#f5f5f7">
                                     </div>
-                                    <button id="save-custom-theme" class="btn-primary" style="margin-top: 12px;">
-                                        <i class="fas fa-save"></i> Guardar Tema Personalizado
+                                    <button id="save-custom-theme-btn" class="btn-primary" style="margin-top: 12px;" onclick="saveCustomTheme()">
+                                        <i class="fas fa-save"></i> Guardar Tema
                                     </button>
                                 </div>
                             </div>
@@ -324,6 +350,31 @@
                         </div>
 
                         <!-- Tab: Data -->
+                        <div id="tab-spellcheck" class="tab-content">
+                            <div class="setting-item">
+                                <label>Páginas de corrección</label>
+                                <span class="setting-desc">Gestiona las páginas que se abrirán al revisar ortografía.</span>
+                                <div class="spellcheck-pages-manager" style="margin-top: 16px;">
+                                    <div class="spellcheck-pages-list" id="spellcheck-pages-list">
+                                        <!-- Se llena dinámicamente -->
+                                    </div>
+                                    <button class="btn-secondary" onclick="addSpellcheckPage()" style="margin-top: 12px;">
+                                        <i class="fas fa-plus"></i> Añadir página
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label>Tamaño de secciones</label>
+                                <span class="setting-desc">Divide el texto en secciones de este tamaño.</span>
+                                <select id="spellcheck-section-size" class="settings-select" style="width: 100%; margin-top: 12px;">
+                                    <option value="3000">3,000 caracteres</option>
+                                    <option value="5000" selected>5,000 caracteres</option>
+                                    <option value="10000">10,000 caracteres</option>
+                                    <option value="15000">15,000 caracteres</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div id="tab-data" class="tab-content">
                             <div class="setting-item">
                                 <label>Gestión de datos</label>
@@ -341,29 +392,16 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="setting-item">
-                                <label>Avatar</label>
-                                <span class="setting-desc">Gestiona tu imagen de perfil.</span>
-                                <div style="display: flex; align-items: center; gap: 16px; margin-top: 12px;">
-                                    <div class="avatar-container" style="width: 60px; height: 60px;">
-                                        <img id="settings-avatar-img" class="avatar-img" src="" alt="Avatar">
-                                        <div id="settings-avatar-placeholder" class="avatar-placeholder">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button id="change-avatar-btn" class="btn-primary">
-                                            <i class="fas fa-camera"></i> Cambiar Avatar
-                                        </button>
-                                        <button id="remove-avatar-btn" class="btn-sub" style="margin-left: 8px;">
-                                            <i class="fas fa-trash"></i> Quitar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <footer class="settings-main-footer">
+                            <div class="footer-left">
+                                <button id="restore-defaults-btn" class="btn-sub-small"
+                                    title="Restaurar a valores de fábrica">
+                                    <i class="fas fa-undo"></i> Restaurar Defaults
+                                </button>
+                                <span class="app-version">v3.2.1</span>
+                            </div>
                             <button id="save-settings-btn" class="btn-primary">Guardar Cambios</button>
                         </footer>
                     </main>
@@ -376,7 +414,8 @@
             <ul id="ctx-sidebar-list" class="ctx-list">
                 <li id="ctx-rename"><i class="fas fa-edit"></i> <span>Renombrar</span></li>
                 <li id="ctx-add-sub"><i class="fas fa-plus-circle"></i> <span>Añadir Sub-archivo</span></li>
-                <li id="ctx-upgrade-sidebar"><i class="fas fa-arrow-up-right-dots"></i> <span>Cambiar Estado</span></li>
+                <li id="ctx-upgrade-sidebar"><i class="fas fa-arrow-up"></i> <span>Upgrade Estado</span></li>
+                <li id="ctx-reset-status"><i class="fas fa-undo"></i> <span>Reiniciar a Borrador</span></li>
                 <li class="ctx-divider"></li>
                 <li id="ctx-delete" class="danger"><i class="fas fa-trash"></i> <span>Eliminar</span></li>
             </ul>
@@ -420,36 +459,6 @@
             </div>
         </div>
 
-        <!-- Avatar Crop Modal -->
-        <div id="avatar-crop-modal" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
-                <button onclick="window.closeAvatarCropModal()" class="close-btn"><i class="fas fa-times"></i></button>
-                <div class="modal-body">
-                    <h2>Recortar Avatar</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 16px;">Ajusta la imagen para tu perfil.</p>
-
-                    <div class="avatar-crop-container">
-                        <div class="crop-ratio-btns">
-                            <button class="active" data-ratio="1">1:1 Cuadrado</button>
-                            <button data-ratio="0.8">4:5 Vertical</button>
-                            <button data-ratio="1.33">4:3 Horizontal</button>
-                        </div>
-                        <div class="crop-preview-area">
-                            <canvas id="avatar-crop-canvas"></canvas>
-                        </div>
-                        <div class="crop-controls">
-                            <label for="avatar-upload-input" class="btn-sub" style="display: inline-flex;">
-                                <i class="fas fa-upload"></i> Subir otra imagen
-                            </label>
-                            <button id="apply-crop-btn" class="btn-primary">
-                                <i class="fas fa-check"></i> Aplicar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Avatar Upload Input (Hidden) -->
         <input type="file" id="avatar-upload-input" accept="image/*">
 
@@ -475,6 +484,37 @@
                 </div>
                 <div class="modal-actions">
                     <button id="spell-confirm-btn" class="btn-primary" style="width: 100%">Entendido, ¡vamos!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Edit Modal -->
+        <div id="state-edit-modal" class="modal">
+            <div class="modal-content">
+                <button onclick="document.getElementById('state-edit-modal').classList.remove('open')"
+                    class="close-btn"><i class="fas fa-times"></i></button>
+                <div class="modal-body">
+                    <h2>Editar Estado</h2>
+                    <div class="setting-item" style="margin-top: 20px;">
+                        <label>Nombre del Estado</label>
+                        <input type="text" id="edit-state-name" placeholder="Ej: Borrador">
+                    </div>
+                    <div class="setting-item">
+                        <label>Tipo de Conteo</label>
+                        <select id="edit-state-type">
+                            <option value="absolute">Contar Totales (Todos los caracteres)</option>
+                            <option value="edited">Contar Ediciones (Total de cambios)</option>
+                            <option value="delta">Contar Nuevos (Solo ganancia neta)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Color</label>
+                        <input type="color" id="edit-state-color" style="height: 40px; cursor: pointer;">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button onclick="window.saveStateFullEdit()" class="btn-primary" style="width: 100%">Guardar
+                        Cambios</button>
                 </div>
             </div>
         </div>
